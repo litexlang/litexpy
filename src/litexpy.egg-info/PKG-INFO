@@ -1,3 +1,13 @@
+Metadata-Version: 2.4
+Name: litexpy
+Version: 0.0.2
+Summary: Python runner for an interactive litex terminal session.
+Project-URL: Homepage, https://github.com/litexlang/litexpy
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3 :: Only
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+
 # litexpy
 
 Python runner for an interactive `litex` terminal session.
