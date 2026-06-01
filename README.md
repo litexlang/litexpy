@@ -13,10 +13,6 @@ Python runner for an interactive `litex` terminal session.
 It does not bundle the Litex executable, so install Litex first if `litex` is
 not already available in your terminal.
 
-Full setup guide:
-
-- https://litexlang.com/doc/Setup
-
 ### If you already have Litex
 
 If `litex -version` works in your terminal, install only the Python package:
@@ -27,62 +23,68 @@ pip install litexpy
 
 ### If you have not installed Litex
 
-Install Litex first, then install `litexpy`.
+Install Litex first locally on your machine, then install `litexpy`.
 
-macOS:
-
-```bash
-brew install litexlang/tap/litex
-pip install litexpy
-litex -version
-```
-
-Linux (Ubuntu/Debian, amd64):
-
-```bash
-tag=$(curl -fsSL https://api.github.com/repos/litexlang/golitex/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
-wget "https://github.com/litexlang/golitex/releases/download/${tag}/litex_${tag}_amd64.deb"
-sudo dpkg -i "litex_${tag}_amd64.deb"
-pip install litexpy
-litex -version
-```
-
-Windows PowerShell:
-
-```powershell
-$ErrorActionPreference = 'Stop'
-$repo = 'litexlang/golitex'
-$tag = (Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases/latest" -Headers @{ 'User-Agent' = 'litex-install' }).tag_name
-$name = "litex_${tag}_windows_amd64.exe"
-$url = "https://github.com/$repo/releases/download/$tag/$name"
-$dir = Join-Path $env:LOCALAPPDATA 'litex'
-$exe = Join-Path $dir 'litex.exe'
-New-Item -ItemType Directory -Force -Path $dir | Out-Null
-Invoke-WebRequest -Uri $url -OutFile $exe
-$userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
-if (-not $userPath) { $userPath = '' }
-if ($userPath -notlike "*$dir*") {
-    $newPath = if ($userPath) { "$userPath;$dir" } else { $dir }
-    [Environment]::SetEnvironmentVariable('Path', $newPath, 'User')
-}
-$env:Path = "$dir;$env:Path"
-pip install litexpy
-litex -version
-```
+Setup guide: https://litexlang.com/doc/Setup
 
 ## Usage
+
+Create a runner:
 
 ```python
 import litexpy
 
 runner = litexpy.Runner()
+```
 
+Run Litex code and read the JSON results:
+
+```python
+results = runner.run("1 = 1")
+
+print(results[0]["result"])
+print(results[0]["stmt"])
+```
+
+Run multiple input lines in the same interactive Litex session:
+
+```python
 results = runner.run("1 = 1\n0 = 0")
+```
+
+Clear the Litex session:
+
+```python
 clear_result = runner.clear()
+```
+
+Close the Litex process:
+
+```python
 runner.quit()
 ```
 
-`litexpy.Runner()` starts the `litex` command in an interactive terminal
-process. `run(script)` sends script to that process and returns the JSON
-results as a list of Python `dict` objects, `clear()` is equivalent to
-`run("clear")`, and `quit()` closes the running `litex` process.
+Use a custom Litex command path or argument list:
+
+```python
+runner = litexpy.Runner("/path/to/litex")
+runner = litexpy.Runner(["/path/to/litex"])
+```
+
+Use the factory helper:
+
+```python
+runner = litexpy.runner()
+```
+
+Read the installed package version:
+
+```python
+print(litexpy.__version__)
+```
+
+`litexpy` exposes `Runner`, `runner()`, and `__version__`. `Runner()` starts the
+`litex` command in an interactive terminal process. `run(script)` sends script
+to that process and returns the JSON results as a list of Python `dict`
+objects. `clear()` is equivalent to `run("clear")`. `quit()` closes the running
+`litex` process.
