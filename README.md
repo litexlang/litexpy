@@ -64,27 +64,7 @@ Close the Litex process:
 runner.quit()
 ```
 
-Use a custom Litex command path or argument list:
-
-```python
-runner = litexpy.Runner("/path/to/litex")
-runner = litexpy.Runner(["/path/to/litex"])
-```
-
-Use the factory helper:
-
-```python
-runner = litexpy.runner()
-```
-
-Read the installed package version:
-
-```python
-print(litexpy.__version__)
-```
-
-`litexpy` exposes `Runner`, `runner()`, and `__version__`. `Runner()` starts the
-`litex` command in an interactive terminal process. `run(script)` sends script
-to that process and returns the JSON results as a list of Python `dict`
-objects. `clear()` is equivalent to `run("clear")`. `quit()` closes the running
-`litex` process.
+`Runner()` starts the `litex` command from your `PATH` in an interactive
+terminal process. `run(script)` sends script to that process and returns the
+JSON results as a list of Python `dict` objects. `clear()` is equivalent to
+`run("clear")`. `quit()` closes the running `litex` process.

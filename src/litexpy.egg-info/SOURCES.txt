@@ -1,5 +1,5 @@
 README.md
-pyproject.toml
+setup.py
 src/litexpy/__init__.py
 src/litexpy/runner.py
 src/litexpy.egg-info/PKG-INFO

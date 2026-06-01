@@ -1,7 +1,5 @@
 """Python runner for an interactive litex terminal session."""
 
-from .runner import Runner, runner
+from .runner import Runner
 
-__version__ = "0.0.6"
-
-__all__ = ["Runner", "runner", "__version__"]
+__all__ = ["Runner"]

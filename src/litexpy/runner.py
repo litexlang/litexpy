@@ -1,55 +1,46 @@
 """Runner for interactive litex sessions."""
 
-from __future__ import annotations
-
 import subprocess
 import threading
 import time
-from collections.abc import Sequence
 from json import JSONDecoder
 from queue import Empty, Queue
-from typing import Any
 
 
 class Runner:
     """Run commands inside an interactive ``litex`` process."""
 
-    def __init__(self, command: str | Sequence[str] = "litex") -> None:
-        if isinstance(command, str):
-            args = [command]
-        else:
-            args = list(command)
-
-        self._output: Queue[str | None] = Queue()
+    def __init__(self):
+        self._output = Queue()
         self._process = subprocess.Popen(
-            args,
+            ["litex"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            text=True,
+            universal_newlines=True,
             bufsize=1,
         )
         self._reader = threading.Thread(target=self._read_output, daemon=True)
         self._reader.start()
         self._read_until_prompts(count=1, timeout=5)
 
-    def run(self, script: str) -> list[dict[str, Any]]:
+    def run(self, script):
         """Send script to litex and return its JSON results."""
         if self._process.poll() is not None:
             raise RuntimeError("litex process is not running")
         if self._process.stdin is None:
             raise RuntimeError("litex process stdin is not available")
 
-        self._process.stdin.write(f"{script}\n")
+        self._process.stdin.write("{}\n".format(script))
         self._process.stdin.flush()
         output = self._read_until_prompts(count=self._prompt_count(script), timeout=30)
         return self._parse_json_results(output)
 
-    def clear(self) -> list[dict[str, Any]]:
+    def clear(self):
         """Clear the litex terminal session."""
         return self.run("clear")
 
-    def quit(self) -> None:
+    def quit(self):
         """Stop the running litex process."""
         if self._process.poll() is not None:
             return
@@ -67,7 +58,7 @@ class Runner:
                 self._process.kill()
                 self._process.wait()
 
-    def _read_output(self) -> None:
+    def _read_output(self):
         if self._process.stdout is None:
             self._output.put(None)
             return
@@ -79,7 +70,7 @@ class Runner:
                 return
             self._output.put(chunk)
 
-    def _read_until_prompts(self, count: int, timeout: float) -> str:
+    def _read_until_prompts(self, count, timeout):
         deadline = time.monotonic() + timeout
         output = ""
         prompt_count = 0
@@ -105,9 +96,9 @@ class Runner:
                 if prompt_count >= count:
                     return output
 
-    def _parse_json_results(self, output: str) -> list[dict[str, Any]]:
+    def _parse_json_results(self, output):
         decoder = JSONDecoder()
-        results: list[dict[str, Any]] = []
+        results = []
         index = 0
 
         while index < len(output):
@@ -131,12 +122,7 @@ class Runner:
         if results:
             return results
 
-        raise ValueError(f"litex output did not contain JSON objects: {output!r}")
+        raise ValueError("litex output did not contain JSON objects: {!r}".format(output))
 
-    def _prompt_count(self, script: str) -> int:
+    def _prompt_count(self, script):
         return max(1, sum(1 for line in script.splitlines() if line.strip()))
-
-
-def runner() -> Runner:
-    """Create a litex runner."""
-    return Runner()
