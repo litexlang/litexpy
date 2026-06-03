@@ -29,42 +29,74 @@ Setup guide: https://litexlang.com/doc/Setup
 
 ## Usage
 
-Create a runner:
+Use a runner as a context manager so the underlying Litex process is closed
+automatically:
 
 ```python
 import litexpy
 
-runner = litexpy.Runner()
+with litexpy.Runner() as runner:
+    results = runner.run("1 = 1")
+
+    print(results[0]["result"])
+    print(results[0]["stmt"])
 ```
 
-Run Litex code and read the JSON results:
+`Runner()` starts `litex` from your `PATH`. To use another command, pass an
+argument list:
 
 ```python
-results = runner.run("1 = 1")
-
-print(results[0]["result"])
-print(results[0]["stmt"])
+runner = litexpy.Runner(command=["cargo", "run", "--quiet", "--"])
 ```
 
-Run multiple input lines in the same interactive Litex session:
+Run multiple lines or block-style Litex code in the same session:
 
 ```python
-results = runner.run("1 = 1\n0 = 0")
+with litexpy.Runner() as runner:
+    results = runner.run("1 = 1\n0 = 0")
+
+    block_results = runner.run(
+        """forall x R:
+    x = 2
+    =>:
+        x + 1 = 3
+        x^2 = 4"""
+    )
 ```
 
-Clear the Litex session:
+Facts accepted by `run()` stay in the interactive session until you call
+`clear()`:
 
 ```python
-clear_result = runner.clear()
+with litexpy.Runner() as runner:
+    runner.run("have a R = 1")
+    runner.run("a = 1")
+    runner.clear()
 ```
 
-Close the Litex process:
+Use `sandbox_run()` for candidate code that should see the current successful
+context but should not modify the main session:
 
 ```python
-runner.quit()
+with litexpy.Runner() as runner:
+    runner.run("have a R = 1")
+    trial = runner.sandbox_run("have b R = 2\na = 1")
+    still_isolated = runner.run("b = 2")  # returns an error result
 ```
 
-`Runner()` starts the `litex` command from your `PATH` in an interactive
-terminal process. `run(script)` sends script to that process and returns the
-JSON results as a list of Python `dict` objects. `clear()` is equivalent to
-`run("clear")`. `quit()` closes the running `litex` process.
+Pass `commit=True` to preflight in a sandbox first, then run the same code in
+the main session only if the sandbox succeeds:
+
+```python
+with litexpy.Runner() as runner:
+    committed = runner.sandbox_run("have b R = 2", commit=True)
+    now_available = runner.run("b = 2")
+```
+
+`commit=True` is a preflight-then-run workflow in Python. It is not a single
+kernel-level transaction, so avoid relying on it for code that reads external
+files that may change between the preflight and the commit run.
+
+If you do not use a `with` block, call `runner.quit()` or `runner.close()` when
+you are done. A live `Runner` owns a live Litex process; relying on Python
+garbage collection or interpreter shutdown is not the supported lifecycle.
