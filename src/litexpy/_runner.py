@@ -1,6 +1,7 @@
 """Runner for interactive litex sessions."""
 
 import os
+import shlex
 import subprocess
 import tempfile
 import threading
@@ -14,13 +15,7 @@ class Runner:
     """Run commands inside an interactive ``litex`` process."""
 
     def __init__(self, command=None, startup_timeout=5, run_timeout=30):
-        if command is None:
-            command = ["litex"]
-        elif isinstance(command, str):
-            command = [command]
-        else:
-            command = list(command)
-
+        command = _resolve_command(command)
         self.command = command
         self.startup_timeout = startup_timeout
         self.run_timeout = run_timeout
@@ -296,3 +291,20 @@ def _close_process_stdout(process):
         process.stdout.close()
     except OSError:
         pass
+
+
+def _resolve_command(command):
+    if command is not None:
+        if isinstance(command, str):
+            return [command]
+        return list(command)
+
+    env_command = os.environ.get("LITEXPY_LITEX_COMMAND")
+    if env_command and env_command.strip():
+        return shlex.split(env_command)
+
+    env_bin = os.environ.get("LITEXPY_LITEX_BIN")
+    if env_bin and env_bin.strip():
+        return [env_bin]
+
+    return ["litex"]

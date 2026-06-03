@@ -9,11 +9,11 @@ with io.open("README.md", encoding="utf-8") as readme:
 
 setup(
     name="litexpy",
-    version="0.0.8",
+    version="0.0.9",
     description="Python runner for an interactive litex terminal session.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    python_requires=">=3.4",
+    python_requires=">=3.8",
     package_dir={"": "src"},
     packages=find_packages("src"),
     classifiers=[

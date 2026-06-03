@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 import unittest
 from pathlib import Path
@@ -123,6 +124,60 @@ class FakePopen:
 class RunnerUnitTests(unittest.TestCase):
     def setUp(self):
         FakePopen.instances = []
+
+    def test_default_command_uses_litex_when_env_is_unset(self):
+        with patch.dict(os.environ, {}, clear=True):
+            with patch("litexpy._runner.subprocess.Popen", FakePopen):
+                with litexpy.Runner() as runner:
+                    runner.run("1 = 1")
+
+        process = FakePopen.instances[0]
+        self.assertEqual(process.command, ["litex"])
+
+    def test_litex_command_env_sets_default_command(self):
+        with patch.dict(
+            os.environ,
+            {"LITEXPY_LITEX_COMMAND": "cargo run --quiet --manifest-path /tmp/Cargo.toml --"},
+            clear=True,
+        ):
+            with patch("litexpy._runner.subprocess.Popen", FakePopen):
+                with litexpy.Runner() as runner:
+                    runner.run("1 = 1")
+
+        process = FakePopen.instances[0]
+        self.assertEqual(
+            process.command,
+            ["cargo", "run", "--quiet", "--manifest-path", "/tmp/Cargo.toml", "--"],
+        )
+
+    def test_litex_bin_env_sets_default_executable(self):
+        with patch.dict(
+            os.environ,
+            {"LITEXPY_LITEX_BIN": "/tmp/litex"},
+            clear=True,
+        ):
+            with patch("litexpy._runner.subprocess.Popen", FakePopen):
+                with litexpy.Runner() as runner:
+                    runner.run("1 = 1")
+
+        process = FakePopen.instances[0]
+        self.assertEqual(process.command, ["/tmp/litex"])
+
+    def test_explicit_command_wins_over_env_defaults(self):
+        with patch.dict(
+            os.environ,
+            {
+                "LITEXPY_LITEX_COMMAND": "env-litex --detail",
+                "LITEXPY_LITEX_BIN": "/tmp/litex",
+            },
+            clear=True,
+        ):
+            with patch("litexpy._runner.subprocess.Popen", FakePopen):
+                with litexpy.Runner(command=["fake-litex"]) as runner:
+                    runner.run("1 = 1")
+
+        process = FakePopen.instances[0]
+        self.assertEqual(process.command, ["fake-litex"])
 
     def test_command_is_used_and_context_manager_closes_process(self):
         with patch("litexpy._runner.subprocess.Popen", FakePopen):

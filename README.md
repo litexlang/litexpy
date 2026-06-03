@@ -42,12 +42,27 @@ with litexpy.Runner() as runner:
     print(results[0]["stmt"])
 ```
 
-`Runner()` starts `litex` from your `PATH`. To use another command, pass an
-argument list:
+`Runner()` starts `litex` from your `PATH` by default. To use another command,
+pass an argument list:
 
 ```python
 runner = litexpy.Runner(command=["cargo", "run", "--quiet", "--"])
 ```
+
+For local Litex development, set a default command so plain `Runner()` uses the
+checkout you choose:
+
+```bash
+export LITEXPY_LITEX_COMMAND='cargo run --quiet --manifest-path /path/to/golitex/Cargo.toml --'
+```
+
+If you already built a local binary, point directly at it:
+
+```bash
+export LITEXPY_LITEX_BIN=/path/to/golitex/target/debug/litex
+```
+
+An explicit `Runner(command=...)` always wins over these environment variables.
 
 Run multiple lines or block-style Litex code in the same session:
 
